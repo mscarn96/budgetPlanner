@@ -1,5 +1,5 @@
 import { plainToClass } from "class-transformer";
-import { validate, ValidationError, ValidatorOptions } from "class-validator";
+import { validate, ValidationError } from "class-validator";
 import express from "express";
 import HttpException from "../exceptions/HttpException";
 

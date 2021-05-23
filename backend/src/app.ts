@@ -31,7 +31,7 @@ class App {
   }
 
   private connectToDatabase() {
-    mongoose.connect(process.env.MONGO_URI, {
+    mongoose.connect(process.env.MONGO_URI as string, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });

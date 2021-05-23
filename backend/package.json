@@ -2,10 +2,11 @@
   "name": "budget-master-backend",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/server.ts",
+  
   "scripts": {
     "start": "tsc && node --unhandled-rejections=strict ./dist/server.js",
-    "debug": "SET DEBUG=* && nodemon --config nodemon.json server.ts",
+    "debug": "SET DEBUG=* && nodemon --config nodemon.json src/server.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Albert Falkowski",

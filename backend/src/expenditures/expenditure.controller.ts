@@ -1,6 +1,7 @@
 import express from "express";
 import Controller from "../common/controller";
 import ExpenditureNotFoundException from "../exceptions/ExpenditureNotFoundException";
+import authMiddleware from "../middleware/auth.middleware";
 import validationMiddleware from "../middleware/validation.middleware";
 import CreateExpenditureDto from "./expenditure.dto";
 import Expenditure from "./expenditure.interface";
@@ -17,14 +18,17 @@ class ExpenditureController implements Controller {
 
   private intializeRoutes() {
     this.router.get(this.path, this.getAllExpenditures);
-    this.router.post(
-      this.path,
-      validationMiddleware(CreateExpenditureDto),
-      this.createExpenditure
-    );
-    this.router.delete(`${this.path}/:id`, this.deleteExpenditure);
-    this.router.put(`${this.path}/:id`, this.modifyExpenditure);
     this.router.get(`${this.path}/:id`, this.getExpenditureById);
+
+    this.router
+      .all(`${this.path}/*`, authMiddleware)
+      .post(
+        this.path,
+        validationMiddleware(CreateExpenditureDto),
+        this.createExpenditure
+      )
+      .delete(`${this.path}/:id`, this.deleteExpenditure)
+      .put(`${this.path}/:id`, this.modifyExpenditure);
   }
 
   //todo test

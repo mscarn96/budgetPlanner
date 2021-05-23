@@ -1,8 +1,14 @@
 import { NextFunction, Response } from "express";
-import jwt from "jsonwebtoken";
+import jwt, { Secret } from "jsonwebtoken";
+import NotAuthorizedException from "../exceptions/NotAuthorizedException";
+import WrongAuthTokenException from "../exceptions/WrongAuthTokenException";
 
 import RequestWithUser from "../interfaces/requestWithUser.interface";
 import userModel from "../users/user.model";
+
+interface DataStoredInToken {
+  _id: string;
+}
 
 async function authMiddleware(
   request: RequestWithUser,
@@ -11,7 +17,7 @@ async function authMiddleware(
 ) {
   const cookies = request.cookies;
   if (cookies && cookies.Authorization) {
-    const secret = process.env.JWT_SECRET;
+    const secret = process.env.JWT_SECRET as Secret;
     try {
       const verifyResponse = jwt.verify(
         cookies.Authorization,
@@ -21,13 +27,14 @@ async function authMiddleware(
       const user = await userModel.findById(id);
       if (user) {
         request.user = user;
-        //todo tbc
         next();
       } else {
-        next();
+        next(new WrongAuthTokenException());
       }
-    } catch (error) {}
-  }
+    } catch (error) {
+      next(new WrongAuthTokenException());
+    }
+  } else next(new NotAuthorizedException());
 }
 
 export default authMiddleware;
