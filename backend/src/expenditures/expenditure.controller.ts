@@ -31,8 +31,6 @@ class ExpenditureController implements Controller {
       .put(`${this.path}/:id`, this.modifyExpenditure);
   }
 
-  //todo test
-
   private getAllExpenditures = (
     req: express.Request,
     res: express.Response

@@ -1,27 +1,27 @@
 import {
   IsBoolean,
-  IsDate,
+  IsDateString,
   IsNumber,
-  IsString,
+  Length,
   ValidateIf,
 } from "class-validator";
 
 class CreateExpenditureDto {
-  @IsString()
+  @Length(3, 20)
   public name: string;
 
   @IsBoolean()
-  public cyclic: string;
+  public cyclic: boolean;
 
   @ValidateIf((o) => o.cyclic)
   @IsNumber()
-  public dayPeriod: number;
+  public dayPeriod?: number;
 
-  @IsString()
-  public icon: string;
+  @IsNumber()
+  public value: number;
 
-  @IsDate()
-  createdAt: string;
+  @IsDateString()
+  createdAt: Date;
 }
 
 export default CreateExpenditureDto;

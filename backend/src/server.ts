@@ -12,4 +12,6 @@ const app = new App(
   parseInt(process.env.PORT as string, 10)
 );
 
-app.listen();
+const server = app.listen();
+
+server.on("close", async () => await app.disconnectDatabase());

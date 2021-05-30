@@ -1,8 +1,7 @@
-interface Expenditure {
+export default interface Income {
   name: string;
+  value: number;
   cyclic: boolean;
   dayPeriod?: number;
-  value: number;
   createdAt: Date;
 }
-export default Expenditure;
