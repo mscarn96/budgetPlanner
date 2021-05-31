@@ -39,6 +39,7 @@ class App {
         {
           useNewUrlParser: true,
           useUnifiedTopology: true,
+          useFindAndModify: false,
         }
       );
       console.log("Database connected");

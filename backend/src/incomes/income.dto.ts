@@ -1,6 +1,6 @@
 import {
   IsBoolean,
-  IsDate,
+  IsDateString,
   IsNumber,
   Length,
   ValidateIf,
@@ -14,14 +14,14 @@ class CreateIncomeDto {
   public value: number;
 
   @IsBoolean()
-  public cyclic: string;
+  public cyclic: boolean;
 
   @ValidateIf((o) => o.cyclic)
   @IsNumber()
-  public dayPeriod: number;
+  public dayPeriod?: number;
 
-  @IsDate()
-  createdAt: string;
+  @IsDateString()
+  public createdAt: Date;
 }
 
 export default CreateIncomeDto;

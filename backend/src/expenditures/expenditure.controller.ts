@@ -86,7 +86,7 @@ class ExpenditureController implements Controller {
       .findByIdAndDelete(req.params.id)
       .then((successResponse) => {
         if (successResponse) {
-          res.send(200);
+          res.sendStatus(200);
         } else {
           next(new ExpenditureNotFoundException(req.params.id));
         }

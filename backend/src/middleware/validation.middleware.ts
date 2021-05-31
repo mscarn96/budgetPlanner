@@ -3,7 +3,7 @@ import { validate, ValidationError } from "class-validator";
 import express from "express";
 import HttpException from "../exceptions/HttpException";
 
-function validationMiddleware<T>(
+function validationMiddleware(
   type: any,
   skipMissingProperties = false
 ): express.RequestHandler {

@@ -11,6 +11,11 @@ const incomeSchema = new mongoose.Schema<Income>({
     type: Date,
     default: Date.now(),
   },
+  User: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
 });
 
 const incomeModel = mongoose.model<Income & mongoose.Document>(
