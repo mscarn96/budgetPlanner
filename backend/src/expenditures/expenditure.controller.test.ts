@@ -41,6 +41,7 @@ describe("Test Expenditure Contoller", () => {
 
     const result = await request(server.app)
       .post("/expenditures")
+      .set("Cookie", [`Authorization=${cookieToken}`])
       .send(expenditure);
     expect(result.status).toBe(200);
     expect(result.body.name).toBe("test");

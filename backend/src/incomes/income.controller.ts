@@ -1,4 +1,5 @@
 import express from "express";
+import { Document } from "mongoose";
 
 import Controller from "../common/controller";
 import IncomeNotFoundException from "../exceptions/IncomeNotFoundException";
@@ -48,7 +49,7 @@ class IncomeController implements Controller {
   ) => {
     this.income.findById(req.params.id).then((income) => {
       if (income) {
-        if (income.User === req.user?._id) {
+        if (this.checkIncomeOwner(req, income)) {
           res.send(income);
         } else {
           next(new NotAuthorizedException());
@@ -69,11 +70,8 @@ class IncomeController implements Controller {
       .findByIdAndUpdate(req.params.id, incomeData, { new: true })
       .then((income) => {
         if (income) {
-          console.log(income.User);
-          console.log(req.user?._id);
-          if (income.User === req.user?._id) {
+          if (this.checkIncomeOwner(req, income)) {
             res.send(income);
-            // !! whyyyyy
           } else {
             next(new NotAuthorizedException());
           }
@@ -103,16 +101,25 @@ class IncomeController implements Controller {
     res: express.Response,
     next: express.NextFunction
   ) => {
-    const incomeToDelete = await this.income.findById(req.params._id);
-    if (incomeToDelete?.User === req.user?._id) {
+    const incomeToDelete = await this.income.findById(req.params.id);
+    if (this.checkIncomeOwner(req, incomeToDelete)) {
       this.income.findByIdAndDelete(req.params.id).then((successResponse) => {
         if (successResponse) {
-          res.send(200);
+          res.sendStatus(200);
         } else {
           next(new IncomeNotFoundException(req.params.id));
         }
       });
     } else next(new NotAuthorizedException());
+  };
+
+  private checkIncomeOwner = (
+    req: RequestWithUser,
+    income: (Income & Document<any, any>) | null
+  ) => {
+    const userId = req.user?._id as unknown as object;
+    const incomeOwnersId = income?.User as unknown as object;
+    return JSON.stringify(userId) === JSON.stringify(incomeOwnersId);
   };
 }
 

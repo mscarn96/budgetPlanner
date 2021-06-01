@@ -1,6 +1,10 @@
 import express from "express";
+import { Document } from "mongoose";
+
 import Controller from "../common/controller";
 import ExpenditureNotFoundException from "../exceptions/ExpenditureNotFoundException";
+import NotAuthorizedException from "../exceptions/NotAuthorizedException";
+import RequestWithUser from "../interfaces/requestWithUser.interface";
 import authMiddleware from "../middleware/auth.middleware";
 import validationMiddleware from "../middleware/validation.middleware";
 import CreateExpenditureDto from "./expenditure.dto";
@@ -24,28 +28,35 @@ class ExpenditureController implements Controller {
       .all(`${this.path}/*`, authMiddleware)
       .post(
         this.path,
+        authMiddleware,
         validationMiddleware(CreateExpenditureDto),
         this.createExpenditure
       )
-      .delete(`${this.path}/:id`, this.deleteExpenditure)
-      .put(`${this.path}/:id`, this.modifyExpenditure);
+      .delete(`${this.path}/:id`, authMiddleware, this.deleteExpenditure)
+      .put(`${this.path}/:id`, authMiddleware, this.modifyExpenditure);
   }
 
   private getAllExpenditures = (
-    req: express.Request,
+    req: RequestWithUser,
     res: express.Response
   ) => {
-    this.expenditure.find().then((expenditures) => res.send(expenditures));
+    this.expenditure
+      .find({ User: req.user?._id })
+      .then((expenditures) => res.send(expenditures));
   };
 
   private getExpenditureById = (
-    req: express.Request,
+    req: RequestWithUser,
     res: express.Response,
     next: express.NextFunction
   ) => {
     this.expenditure.findById(req.params.id).then((expenditure) => {
       if (expenditure) {
-        res.send(expenditure);
+        if (this.checkExpenditureOwner(req, expenditure)) {
+          res.send(expenditure);
+        } else {
+          next(new NotAuthorizedException());
+        }
       } else {
         next(new ExpenditureNotFoundException(req.params.id));
       }
@@ -62,35 +73,56 @@ class ExpenditureController implements Controller {
       .findByIdAndUpdate(req.params.id, expenditureData, { new: true })
       .then((expenditure) => {
         if (expenditure) {
-          res.send(expenditure);
+          if (this.checkExpenditureOwner(req, expenditure)) {
+            res.send(expenditure);
+          } else {
+            next(new NotAuthorizedException());
+          }
         } else {
           next(new ExpenditureNotFoundException(req.params.id));
         }
       });
   };
 
-  private createExpenditure = (req: express.Request, res: express.Response) => {
+  private createExpenditure = (req: RequestWithUser, res: express.Response) => {
     const expenditureData: Expenditure = req.body;
     const createdExpenditure = new this.expenditure(expenditureData);
+    if (req.user) {
+      createdExpenditure.User = req.user?._id;
+    }
     createdExpenditure.save().then((savedExpenditure) => {
       res.send(savedExpenditure);
     });
   };
 
-  private deleteExpenditure = (
-    req: express.Request,
+  private deleteExpenditure = async (
+    req: RequestWithUser,
     res: express.Response,
     next: express.NextFunction
   ) => {
-    this.expenditure
-      .findByIdAndDelete(req.params.id)
-      .then((successResponse) => {
-        if (successResponse) {
-          res.sendStatus(200);
-        } else {
-          next(new ExpenditureNotFoundException(req.params.id));
-        }
-      });
+    const expenditureToDelete = await this.expenditure.findById(req.params.id);
+    if (this.checkExpenditureOwner(req, expenditureToDelete)) {
+      this.expenditure
+        .findByIdAndDelete(req.params.id)
+        .then((successResponse) => {
+          if (successResponse) {
+            res.sendStatus(200);
+          } else {
+            next(new ExpenditureNotFoundException(req.params.id));
+          }
+        });
+    } else {
+      next(new NotAuthorizedException());
+    }
+  };
+
+  private checkExpenditureOwner = (
+    req: RequestWithUser,
+    expenditure: (Expenditure & Document<any, any>) | null
+  ) => {
+    const userId = req.user?._id as unknown as object;
+    const expenditureOwnersId = expenditure?.User as unknown as object;
+    return JSON.stringify(userId) === JSON.stringify(expenditureOwnersId);
   };
 }
 

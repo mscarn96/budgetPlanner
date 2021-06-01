@@ -64,8 +64,16 @@ describe("Test income controller", () => {
       .put(`${PATH}/${incomeId}`)
       .set("Cookie", [`Authorization=${cookieToken}`])
       .send(editedIncome);
-    console.log(result.body);
     expect(result.status).toBe(200);
     expect(result.body.name).toBe("next test");
+  });
+
+  it("Removing income should return success status", async () => {
+    const result = await request(server.app)
+      .delete(`${PATH}/${incomeId}`)
+      .set("Cookie", [`Authorization=${cookieToken}`])
+      .send();
+
+    expect(result.status).toBe(200);
   });
 });

@@ -1,11 +1,11 @@
-interface Expenditure {
+export default interface Expenditure {
   name: string;
   cyclic: boolean;
   dayPeriod?: number;
   value: number;
   createdAt: Date;
+  User: string;
 }
-export default Expenditure;
 
 export type SingleExpenditure = Expenditure & {
   cyclic: false;

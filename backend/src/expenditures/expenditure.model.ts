@@ -11,6 +11,11 @@ const expenditureSchema = new mongoose.Schema<Expenditure>({
     type: Date,
     default: Date.now(),
   },
+  User: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
 });
 
 const expenditureModel = mongoose.model<Expenditure & mongoose.Document>(
