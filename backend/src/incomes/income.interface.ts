@@ -13,4 +13,5 @@ export type SingleIncome = Income & {
 export type RegularIncome = Income & {
   cyclic: true;
   dayPeriod: number;
+  endDate?: Date;
 };

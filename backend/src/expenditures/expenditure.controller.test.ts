@@ -34,8 +34,9 @@ describe("Test Expenditure Contoller", () => {
     const createdAt = new Date();
     const expenditure: CreateExpenditureDto = {
       name: "test",
-      cyclic: false,
+      cyclic: true,
       value: 500,
+      dayPeriod: 30,
       createdAt,
     };
 

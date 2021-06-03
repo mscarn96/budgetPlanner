@@ -15,4 +15,5 @@ export type Subscription = Expenditure & {
   cyclic: true;
   dayPeriod: number;
   icon: string;
+  endDate?: Date;
 };
