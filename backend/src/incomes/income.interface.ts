@@ -2,7 +2,7 @@ export default interface Income {
   name: string;
   value: number;
   cyclic: boolean;
-  createdAt: Date;
+  createdAt: string;
   User: string;
 }
 

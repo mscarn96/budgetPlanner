@@ -21,8 +21,12 @@ class ExpenditureController implements Controller {
   }
 
   private intializeRoutes() {
-    this.router.get(this.path, this.getAllExpenditures);
-    this.router.get(`${this.path}/:id`, this.getExpenditureById);
+    this.router.get(this.path, authMiddleware, this.getAllExpenditures);
+    this.router.get(
+      `${this.path}/:id`,
+      authMiddleware,
+      this.getExpenditureById
+    );
 
     this.router
       .all(`${this.path}/*`, authMiddleware)
@@ -45,43 +49,45 @@ class ExpenditureController implements Controller {
       .then((expenditures) => res.send(expenditures));
   };
 
-  private getExpenditureById = (
+  private getExpenditureById = async (
     req: RequestWithUser,
     res: express.Response,
     next: express.NextFunction
   ) => {
-    this.expenditure.findById(req.params.id).then((expenditure) => {
-      if (expenditure) {
-        if (this.checkExpenditureOwner(req, expenditure)) {
-          res.send(expenditure);
-        } else {
-          next(new NotAuthorizedException());
-        }
+    try {
+      const currentExpenditure = await this.expenditure.findById(req.params.id);
+      if (this.checkExpenditureOwner(req, currentExpenditure)) {
+        res.send(currentExpenditure);
       } else {
-        next(new ExpenditureNotFoundException(req.params.id));
+        next(new NotAuthorizedException());
       }
-    });
+    } catch (error) {
+      next(new ExpenditureNotFoundException(req.params.id));
+    }
   };
 
-  private modifyExpenditure = (
+  private modifyExpenditure = async (
     req: express.Request,
     res: express.Response,
     next: express.NextFunction
   ) => {
     const expenditureData: Expenditure = req.body;
-    this.expenditure
-      .findByIdAndUpdate(req.params.id, expenditureData, { new: true })
-      .then((expenditure) => {
-        if (expenditure) {
-          if (this.checkExpenditureOwner(req, expenditure)) {
-            res.send(expenditure);
-          } else {
-            next(new NotAuthorizedException());
-          }
-        } else {
-          next(new ExpenditureNotFoundException(req.params.id));
-        }
-      });
+
+    try {
+      const expenditureToUpdate = await this.expenditure.findById(
+        req.params.id
+      );
+      if (this.checkExpenditureOwner(req, expenditureToUpdate)) {
+        const updatedExpenditure = await this.expenditure.findByIdAndUpdate(
+          req.params.id,
+          expenditureData,
+          { new: true }
+        );
+        res.send(updatedExpenditure);
+      } else next(new NotAuthorizedException());
+    } catch (error) {
+      next(new ExpenditureNotFoundException(req.params.id));
+    }
   };
 
   private createExpenditure = (req: RequestWithUser, res: express.Response) => {
@@ -100,19 +106,16 @@ class ExpenditureController implements Controller {
     res: express.Response,
     next: express.NextFunction
   ) => {
-    const expenditureToDelete = await this.expenditure.findById(req.params.id);
-    if (this.checkExpenditureOwner(req, expenditureToDelete)) {
-      this.expenditure
-        .findByIdAndDelete(req.params.id)
-        .then((successResponse) => {
-          if (successResponse) {
-            res.sendStatus(200);
-          } else {
-            next(new ExpenditureNotFoundException(req.params.id));
-          }
-        });
-    } else {
-      next(new NotAuthorizedException());
+    try {
+      const expenditureToDelete = await this.expenditure.findById(
+        req.params.id
+      );
+      if (this.checkExpenditureOwner(req, expenditureToDelete)) {
+        await this.expenditure.findByIdAndDelete(req.params.id);
+        res.sendStatus(200);
+      } else next(new NotAuthorizedException());
+    } catch (error) {
+      next(new ExpenditureNotFoundException(req.params.id));
     }
   };
 

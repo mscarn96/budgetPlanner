@@ -42,43 +42,43 @@ class IncomeController implements Controller {
       .then((incomes) => res.send(incomes));
   };
 
-  private getIncomeById = (
+  private getIncomeById = async (
     req: RequestWithUser,
     res: express.Response,
     next: express.NextFunction
   ) => {
-    this.income.findById(req.params.id).then((income) => {
-      if (income) {
-        if (this.checkIncomeOwner(req, income)) {
-          res.send(income);
-        } else {
-          next(new NotAuthorizedException());
-        }
+    try {
+      const currentIncome = await this.income.findById(req.params.id);
+      if (this.checkIncomeOwner(req, currentIncome)) {
+        res.send(currentIncome);
       } else {
-        next(new IncomeNotFoundException(req.params.id));
+        next(new NotAuthorizedException());
       }
-    });
+    } catch (error) {
+      next(new IncomeNotFoundException(req.params.id));
+    }
   };
 
-  private modifyIncome = (
+  private modifyIncome = async (
     req: RequestWithUser,
     res: express.Response,
     next: express.NextFunction
   ) => {
     const incomeData: Income = req.body;
-    this.income
-      .findByIdAndUpdate(req.params.id, incomeData, { new: true })
-      .then((income) => {
-        if (income) {
-          if (this.checkIncomeOwner(req, income)) {
-            res.send(income);
-          } else {
-            next(new NotAuthorizedException());
-          }
-        } else {
-          next(new IncomeNotFoundException(req.params.id));
-        }
-      });
+
+    try {
+      const incomeToUpdate = await this.income.findById(req.params.id);
+      if (this.checkIncomeOwner(req, incomeToUpdate)) {
+        const updatedInome = await this.income.findByIdAndUpdate(
+          req.params.id,
+          incomeData,
+          { new: true }
+        );
+        res.send(updatedInome);
+      } else next(new NotAuthorizedException());
+    } catch (error) {
+      next(new IncomeNotFoundException(req.params.id));
+    }
   };
 
   private createIncome = (
@@ -101,16 +101,15 @@ class IncomeController implements Controller {
     res: express.Response,
     next: express.NextFunction
   ) => {
-    const incomeToDelete = await this.income.findById(req.params.id);
-    if (this.checkIncomeOwner(req, incomeToDelete)) {
-      this.income.findByIdAndDelete(req.params.id).then((successResponse) => {
-        if (successResponse) {
-          res.sendStatus(200);
-        } else {
-          next(new IncomeNotFoundException(req.params.id));
-        }
-      });
-    } else next(new NotAuthorizedException());
+    try {
+      const incomeToDelete = await this.income.findById(req.params.id);
+      if (this.checkIncomeOwner(req, incomeToDelete)) {
+        await this.income.findByIdAndDelete(req.params.id);
+        res.sendStatus(200);
+      } else next(new NotAuthorizedException());
+    } catch (error) {
+      next(new IncomeNotFoundException(req.params.id));
+    }
   };
 
   private checkIncomeOwner = (
